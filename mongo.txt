@@ -1,0 +1,274 @@
+const multer = require('multer');
+const storage = multer.memoryStorage(); // multer now stores files in memory as Buffer
+const upload = multer({ storage: storage });
+
+  //In Node.js (using Multer for file uploads),
+memoryStorage() means the uploaded files are not saved on your computer’s disk — instead, they are temporarily kept in the server’s RAM (memory).
+//only use memoryStorage() for small files or temporary use,
+otherwise, it can crash your server if too many large files are uploaded.
+// will tell later how to store permanently in this notepad
+//How it works step by step:
+
+When a user uploads a file (for example, a photo or document),
+
+Multer takes that uploaded file and stores it directly in memory (RAM),
+instead of saving it to a folder like uploads/.
+//Step 2: What happens next
+
+At this stage, the file is not stored permanently — it only exists in memory until your code saves it somewhere.
+
+If you do nothing, the data is lost after the request finishes.
+//When you use memoryStorage(), Multer gives you a req.file object like this:
+//{
+  fieldname: 'file',
+  originalname: 'photo.jpg',
+  encoding: '7bit',
+  mimetype: 'image/jpeg',
+  buffer: <Buffer ff d8 ff e0 00 10 4a 46 ... >, // <-- actual file data in memory
+  size: 12845
+}//
+//req.file.buffer
+
+This property (req.file.buffer) contains the entire file data as a binary buffer.
+
+You can use it directly in code — for example:
+
+Upload it to cloud storage (like AWS S3, Google Cloud, or Firebase).
+
+Convert it to a base64 string.
+
+Or process it (resize, compress, etc.) using libraries like sharp.
+
+
+const path = require('path');
+const express = require('express');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const cors = require('cors');
+const app = express();
+//require in Node.js is used to import or load modules, libraries, or files into your project.
+//require() is a built-in Node.js function used to import code from:
+Built-in Node.js modules (like path, fs, http)
+
+Installed npm packages (like express, mongoose, cors)
+
+Your own local files (like ./routes/user.js)
+
+app.use(cors());
+
+//This allows all origins (any frontend URL) to make API requests to your backend
+//Without CORS, the browser would block the request.
+
+//const cors = require('cors');
+app.use(cors({
+  origin: 'http://localhost:5500', // only allow this frontend
+}));
+//Now, if someone tries to send a request from a different port or domain to communicate with backhend, it will be blocked.
+//for multi port send request to backend then differnt way
+//You can send:
+
+GET → to fetch data or document
+
+POST → to send or upload data
+
+PUT → to update data
+
+DELETE → to delete something
+app.use(express.json());
+//✅ You need it for:
+
+Login forms
+
+Signup forms
+
+Any POST/PUT request that sends JSON data from the frontend
+
+mongoose.connect('mongodb://localhost:27017/dsa')
+  .then(() => console.log("Connected to MongoDB (dsa)"))
+  .catch(err => console.error("MongoDB connection error:", err));
+//Step 1: mongoose.connect('mongodb://localhost:27017/dsa')
+
+mongoose.connect() — This function is used to connect your Node.js backend to your MongoDB database.
+
+'mongodb://localhost:27017/dsa' — This is the MongoDB connection string.
+
+//Let’s break it:
+
+mongodb:// → This tells Node that we’re using the MongoDB protocol.
+
+localhost → The MongoDB server is running on your local machine.
+
+27017 → The default port number where MongoDB runs.
+
+dsa → The database name.
+If the database doesn’t exist yet, MongoDB will automatically create it when you insert the first record.
+
+✅ So this line says:
+“Connect to a MongoDB database named dsa on my local computer at port 27017.”
+
+const userSchema = new mongoose.Schema({
+  email: String,
+  password: String
+});
+const User = mongoose.model('User', userSchema);
+//const userSchema = new mongoose.Schema({...})
+
+mongoose.Schema → defines the structure (blueprint) of your data (like a database table design in SQL
+
+
+
+const fileSchema = new mongoose.Schema({
+  filename: String,
+  originalname: String,
+  email: String,
+  data: Buffer,          // Store file binary data here
+  contentType: String,   // Store file MIME type
+  uploadDate: { type: Date, default: Date.now },
+   fileHash: String // Add this line!
+});
+const File = mongoose.model('File', fileSchema);
+
+
+
+app.post('/api/signup', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+    const hash = await bcrypt.hash(password, 10);
+    const user = new User({ email, password: hash });
+    await user.save();
+    res.json({ message: 'Signup successful' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(401).json({ error: 'User not found' });
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) return res.status(401).json({ error: 'Wrong password' });
+  res.json({ message: 'Login successful' });
+});
+
+
+const crypto = require('crypto'); // Add this import
+
+
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  const { userEmail } = req.body;
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  try {
+    // Create hash from file buffer
+    const hash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
+    
+    // Check if file with same hash already exists for this user
+    const existing = await File.findOne({ fileHash: hash, email: userEmail });
+    if (existing) {
+      return res.status(409).json({ error: 'Duplicate file detected. This file already exists.' });
+    }
+
+
+    const file = new File({
+      filename: req.file.originalname,
+      originalname: req.file.originalname,
+      email: userEmail,
+      data: req.file.buffer,
+      contentType: req.file.mimetype,
+      fileHash: hash // Save hash in document
+    });
+    await file.save();
+    res.json({ message: 'File uploaded and saved to DB!' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error saving file info' });
+  }
+});
+
+
+// API to list files metadata without data buffer
+app.get('/api/files', async (req, res) => {
+  const userEmail = req.query.email;
+  try {
+    if (!userEmail) {
+      return res.status(400).json({ error: 'Missing email parameter' });
+    }
+    // NOW: includes contentType
+    const files = await File.find({ email: userEmail }).select('filename originalname contentType uploadDate');
+    res.json(files);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to list files' });
+  }
+});
+
+
+const sharp = require('sharp');
+
+app.get('/api/file/:id', async (req, res) => {
+  try {
+    const file = await File.findById(req.params.id);
+    if (!file) return res.status(404).send('File not found');
+
+    const isDownload = req.query.download === '1';
+    res.setHeader('Content-Type', file.contentType);
+
+    if (isDownload) {
+      // Force download
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${file.originalname}"`
+      );
+    } else {
+      // View inline (so browser displays it)
+      res.setHeader(
+        'Content-Disposition',
+        `inline; filename="${file.originalname}"`
+      );
+    }
+
+    res.send(file.data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error serving file');
+  }
+});
+
+
+
+
+app.delete('/api/files/:id', async (req, res) => {
+  const fileId = req.params.id;
+  try {
+    // Find and delete file metadata from DB
+    const file = await File.findByIdAndDelete(fileId);
+    if (!file) return res.status(404).json({ error: 'File not found' });
+
+
+    // Also delete the actual file from uploads folder
+    // const fs = require('fs');
+    // const filePath = `uploads/${file.filename}`;
+    // fs.unlink(filePath, (err) => {
+    //   if (err) console.error('Error deleting file:', err);
+    // });
+    res.json({ message: 'File deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+
+app.listen(5000, () => console.log('Server running on http://localhost:5000'));
+
+
+
+    
