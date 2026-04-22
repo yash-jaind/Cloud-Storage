@@ -49,13 +49,9 @@ const app = express();
 //require in Node.js is used to import or load modules, libraries, or files into your project.
 //require() is a built-in Node.js function used to import code from:
 Built-in Node.js modules (like path, fs, http)
-
-Installed npm packages (like express, mongoose, cors)
-
+Installed npm packages (like express, mongoose, cors)\\
 Your own local files (like ./routes/user.js)
-
 app.use(cors());
-
 //This allows all origins (any frontend URL) to make API requests to your backend
 //Without CORS, the browser would block the request.
 
