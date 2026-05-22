@@ -9,7 +9,7 @@ This project is a simple cloud storage web application where users can upload, d
 - JavaScript
 - bcrypt
 - Multer
-- REST AP
+- REST API
 ## Features
 - User signup and login system
 - Secure password storage using bcrypt
