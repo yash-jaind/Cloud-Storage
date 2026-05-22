@@ -1,6 +1,6 @@
 # Secure Cloud File Storage System
 
-A web application where users can securely upload, download, and manage their files online.
+This project is a simple cloud storage web application where users can upload, download, and manage their files securely. It also includes user authentication and basic file protection features.
 
 ## Technologies Used
 - Node.js
@@ -8,10 +8,22 @@ A web application where users can securely upload, download, and manage their fi
 - MongoDB
 - JavaScript
 
-## Main Features
-- User login and signup system
-- Passwords stored securely using bcrypt hashing
-- Upload and download files safely
-- Delete files when needed
-- Detect duplicate files using SHA-256 hashing
-- File type checking and 10MB upload limit
+## Features
+- User signup and login system
+- Secure password storage using bcrypt
+- Upload and download files
+- Delete uploaded files
+- Duplicate file detection using SHA-256 hashing
+- File validation with a 10MB upload limit
+
+## How to Run
+
+1. Install dependencies
+
+npm install
+
+2. Start MongoDB
+
+3. Run the server
+
+node server.js
