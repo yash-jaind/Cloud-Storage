@@ -7,7 +7,9 @@ This project is a simple cloud storage web application where users can upload, d
 - Express.js
 - MongoDB
 - JavaScript
-
+- bcrypt
+- Multer
+- REST AP
 ## Features
 - User signup and login system
 - Secure password storage using bcrypt
