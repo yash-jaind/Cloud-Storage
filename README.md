@@ -29,3 +29,7 @@ npm install
 3. Run the server
 
 node server.js
+
+## Project Screenshot
+
+![Cloud Storage](Screenshot/cloud%20storage.png)
