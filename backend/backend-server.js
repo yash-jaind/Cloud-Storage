@@ -1,7 +1,7 @@
   // Allowed file types
   const multer = require('multer');
   const jwt = require('jsonwebtoken');
-  const SECRET_KEY = "mysecretkey"; // (you can change later)
+ const SECRET_KEY = process.env.JWT_SECRET; // (you can change later)
   // 👇 PUT IT HERE
   const allowedTypes = [
     'application/pdf',
@@ -202,7 +202,7 @@
   app.get('/', (req, res) => {
     res.send('Server is running successfully 🚀');
   });
-mongoose.connect('mongodb://127.0.0.1:27017/dsa')
+mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB Connected");
 
