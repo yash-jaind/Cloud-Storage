@@ -1,13 +1,13 @@
 {
-"name": "cloud-storage-backend",
+  "name": "cloud-storage-backend",
   "version": "1.0.0",
   "description": "",
   "main": "playground-2.mongodb.js",
-"scripts": {
-  "start": "node backend-server.js",
-  "dev": "node backend-server.js",
-  "test": "echo \"Error: no test specified\" && exit 1"
-}
+  "scripts": {
+    "start": "node backend-server.js",
+    "dev": "node backend-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
